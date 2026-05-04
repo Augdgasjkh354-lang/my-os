@@ -37,7 +37,7 @@ provider 标识（Worker端已映射，前端直接用）：
 - `exchangerate` → ExchangeRate-API
 - `deepseek` → DeepSeek
 - `glm` → 智谱（base: open.bigmodel.cn）
-- `minimax` → MiniMax
+- `qwen` → Qwen（通义千问）
 
 示例：`${workerUrl}/openweather/data/2.5/weather?q=Beijing&appid=${owmKey}` + header `X-Access-Token: ${accessToken}`
 
@@ -137,7 +137,7 @@ Hash路由，三个主路由：#/report、#/memory、#/settings。js/router.js�
 
 - DeepSeek：通过model切换（v4-pro=思考开，v4-flash=思考关），body无额外参数
 - GLM：同model glm-5.1，body加 thinking:{type:‘enabled’|‘disabled’}
-- MiniMax：同model MiniMax-M2.7，body控制方式以最新文档为准
+- Qwen：同一model，body加 enable_thinking:true/false 控制。Chat模式用qwen3.5-flash，Thinking模式用qwen3-max。
 
 ## 对话标题自动生成
 
