@@ -102,3 +102,20 @@ my-os/
 - 修改时不破坏已有功能
 - commit message 用中文简洁说明
 - 阶段性大改动单commit，不要每个小改都commit
+
+## 路由约定
+
+Hash路由，三个主路由：#/report、#/memory、#/settings。js/router.js管理切换。无hash默认到#/report。
+
+## CDN例外
+
+唯一允许的CDN脚本：marked.js（markdown渲染）。引入方式 <script src="https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js"></script>。其他任何外部脚本/库需重新讨论。
+
+## 晨报生成时机
+
+每日首次进入#/report时自动检查并生成。同一天反复进入只读取缓存。“重新生成”按钮可强制覆盖。
+
+## Worker代理特例
+
+- goldapi的key使用 X-Goldapi-Token 头（避免与Worker自身的X-Access-Token冲突）
+- Worker端会自动把它改名为上游期望的x-access-token
