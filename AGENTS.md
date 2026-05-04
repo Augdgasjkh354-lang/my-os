@@ -119,3 +119,26 @@ Hash路由，三个主路由：#/report、#/memory、#/settings。js/router.js�
 
 - goldapi的key使用 X-Goldapi-Token 头（避免与Worker自身的X-Access-Token冲突）
 - Worker端会自动把它改名为上游期望的x-access-token
+
+## Agent系统
+
+- 应用启动检查 agents store，空则写入3个种子agent（分析师/写手/速查）
+- is_seed=true 的agent允许编辑但不可删除
+- 每个agent绑定 provider、model、system_prompt、thinking_default、icon、color
+
+## 对话流程
+
+- 一个 conversation 关联一个起始 agent，但允许会话中切换
+- 切换后的消息使用新agent的system_prompt和model
+- 流式必须用 stream.js consumeSSE
+- assistant消息的thinking_content单独存储，UI区分展示
+
+## Provider思考模式映射
+
+- DeepSeek：通过model切换（v4-pro=思考开，v4-flash=思考关），body无额外参数
+- GLM：同model glm-5.1，body加 thinking:{type:‘enabled’|‘disabled’}
+- MiniMax：同model MiniMax-M2.7，body控制方式以最新文档为准
+
+## 对话标题自动生成
+
+首条assistant消息完成后，异步调用速查Agent，prompt: “用10字内简体中文概括以下用户问题作为对话标题，仅输出标题，无需引号或标点：{首条用户消息}”
