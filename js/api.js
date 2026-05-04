@@ -1,35 +1,21 @@
 (() => {
   async function proxyFetch(provider, path, options = {}) {
-    const workerUrl = await window.app.db.getSetting('workerUrl');
-    const accessToken = await window.app.db.getSetting('accessToken');
-    if (!workerUrl) throw new Error('请先在设置中填写 Worker URL');
-    if (!accessToken) throw new Error('请先在设置中填写 Access Token');
-
-    const cleanWorkerUrl = String(workerUrl).replace(/\/$/, '');
-    const cleanPath = String(path).replace(/^\//, '');
-    const url = `${cleanWorkerUrl}/${provider}/${cleanPath}`;
-    const headers = new Headers(options.headers || {});
-    headers.set('X-Access-Token', accessToken);
+    const workerUrl = await window.app.db.getSetting('workerUrl'); const accessToken = await window.app.db.getSetting('accessToken');
+    if (!workerUrl) throw new Error('请先在设置中填写 Worker URL'); if (!accessToken) throw new Error('请先在设置中填写 Access Token');
+    const url = `${String(workerUrl).replace(/\/$/, '')}/${provider}/${String(path).replace(/^\//, '')}`;
+    const headers = new Headers(options.headers || {}); headers.set('X-Access-Token', accessToken);
     return fetch(url, { ...options, headers });
   }
-
-  function resolveModelProvider(model) {
-    if (model.startsWith('deepseek')) return { provider: 'deepseek', keyName: 'deepSeekKey', path: 'v1/chat/completions' };
-    if (model.startsWith('glm')) return { provider: 'glm', keyName: 'glmKey', path: 'api/paas/v4/chat/completions' };
-    return { provider: 'minimax', keyName: 'miniMaxKey', path: 'v1/text/chatcompletion_v2' };
+  async function callAI(agent, messages, opts = {}) {
+    const thinking = opts.thinking ?? agent.thinking_default;
+    const map = { deepseek: { key: 'deepSeekKey', path: 'v1/chat/completions' }, glm: { key: 'glmKey', path: 'api/paas/v4/chat/completions' }, minimax: { key: 'miniMaxKey', path: 'v1/text/chatcompletion_v2' } };
+    const cfg = map[agent.provider]; if (!cfg) throw new Error('不支持的Provider');
+    const key = await window.app.db.getSetting(cfg.key); if (!key) throw new Error(`请先填写 ${cfg.key}`);
+    let model = agent.model; const body = { model, messages, stream: true, temperature: 0.7 };
+    if (agent.provider === 'deepseek') body.model = thinking ? 'deepseek-v4-pro' : 'deepseek-v4-flash';
+    if (agent.provider === 'glm') body.thinking = { type: thinking ? 'enabled' : 'disabled' };
+    if (agent.provider === 'minimax' && thinking) body.thinking_budget = 1024;
+    return proxyFetch(agent.provider, cfg.path, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: JSON.stringify(body) });
   }
-
-  async function chatCompletions(model, body) {
-    const { provider, keyName, path } = resolveModelProvider(model);
-    const key = await window.app.db.getSetting(keyName);
-    if (!key) throw new Error(`请先在设置中填写 ${keyName}`);
-    return proxyFetch(provider, path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-      body: JSON.stringify(body)
-    });
-  }
-
-  window.app = window.app || {};
-  window.app.api = { proxyFetch, chatCompletions };
+  window.app = window.app || {}; window.app.api = { proxyFetch, callAI };
 })();

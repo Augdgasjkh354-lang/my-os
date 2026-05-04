@@ -55,3 +55,11 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .tag { background: #2a2a2a; border-radius: 10px; padding: 2px 8px; }
 .star-btn,.tag-suggest { margin-right: 6px; }
 @media (max-width: 768px) { .report-grid { grid-template-columns: 1fr; } }
+.chat-page{display:flex;flex-direction:column;height:calc(100vh - 120px)}
+.chat-head{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
+.chat-msgs{flex:1;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:10px;background:#111}
+.msg{max-width:88%;margin:8px 0;padding:8px 10px;border-radius:8px;border:1px solid var(--border)}
+.msg.u{margin-left:auto;background:#1a1a1a}.msg.a{margin-right:auto;border-left:3px solid var(--accent)}
+.chat-input{margin-top:8px}.chat-actions{display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+.agent-dot{display:inline-flex;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center;margin-right:8px}
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}.agent-card{text-align:left}

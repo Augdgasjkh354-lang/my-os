@@ -46,6 +46,23 @@
     container.querySelector('#field-reportModel').addEventListener('change', e => saveField('reportModel', e.target.value));
     container.querySelector('#field-newsCategory').addEventListener('change', e => saveField('newsCategory', e.target.value));
     container.querySelector('#field-newsCountry').addEventListener('change', e => saveField('newsCountry', e.target.value));
+
+    const agentSec = document.createElement('section');
+    agentSec.className='section';
+    const agents = await window.app.db.getAllAgents();
+    agentSec.innerHTML = `<h2>Agent管理</h2><button id='new-agent' class='primary'>+ 新建Agent</button><div class='agent-grid'>${agents.map(a=>`<button class='agent-card' data-agent='${a.id}'><span class='agent-dot' style='background:${a.color}'>${a.icon}</span><b>${a.name}</b><div class='helper'>${a.provider} / ${a.model}</div><div class='helper'>${String(a.system_prompt||'').slice(0,40)}</div></button>`).join('')}</div>`;
+    container.appendChild(agentSec);
+    const editAgent = async (agent) => {
+      const name = prompt('名称', agent?.name || ''); if (!name) return;
+      const icon = prompt('图标emoji', agent?.icon || '🤖') || '🤖';
+      const color = prompt('颜色HEX', agent?.color || '#4a9eff') || '#4a9eff';
+      if (agent) await window.app.db.updateAgent(agent.id, { name, icon, color });
+      else await window.app.db.addAgent({ name, icon, color, provider:'deepseek', model:'deepseek-v4-flash', thinking_default:false, system_prompt:'你是助手', is_seed:false });
+      renderSettingsPage(container);
+    };
+    container.querySelector('#new-agent').addEventListener('click', () => editAgent(null));
+    container.querySelectorAll('[data-agent]').forEach(el => el.addEventListener('click', async () => editAgent(agents.find(a => a.id === Number(el.dataset.agent)))));
+
   }
 
   window.app = window.app || {};
