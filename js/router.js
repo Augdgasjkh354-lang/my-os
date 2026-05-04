@@ -2,6 +2,8 @@
   const ROUTES = {
     report: '#/report',
     memory: '#/memory',
+    chat: '#/chat',
+    tasks: '#/tasks',
     settings: '#/settings'
   };
 
@@ -31,6 +33,10 @@
     try {
       if (route === ROUTES.report) {
         await window.app.report.renderReportPage(main);
+      } else if (route === ROUTES.chat) {
+        await window.app.chat.renderChatPage(main);
+      } else if (route === ROUTES.tasks) {
+        await window.app.tasks.renderTasksPage(main);
       } else if (route === ROUTES.memory) {
         await window.app.memory.renderMemoryPage(main);
       } else {
@@ -48,6 +54,8 @@
         <div class="logo">my-os</div>
         <nav class="nav-tabs">
           <button class="nav-tab" data-route="#/report" type="button">晨报</button>
+          <button class="nav-tab" data-route="#/chat" type="button">对话</button>
+          <button class="nav-tab" data-route="#/tasks" type="button">任务</button>
           <button class="nav-tab" data-route="#/memory" type="button">记忆</button>
           <button class="nav-tab" data-route="#/settings" type="button">设置</button>
         </nav>
