@@ -52,7 +52,7 @@
 - 默认markdown
 - 给出主稿后，若有可改进处，附”备选段落”或”删减建议”
 - 不要无意义的小标题（“前言”、“总结”这种），有内容才上小标题`},
-    { name:'速查', icon:'⚡', color:'#10b981', provider:'minimax', model:'MiniMax-M2.7', thinking_default:false, is_seed:true, system_prompt:`# 角色：速查
+    { name:'速查', icon:'⚡', color:'#10b981', provider:'qwen', model:'qwen3.5-flash', thinking_default:false, is_seed:true, system_prompt:`# 角色：速查
 
 你是Jack的快速回答助手。
 
@@ -67,7 +67,18 @@
 
 只有当用户问题真的模糊到无法回答（不是答案复杂，是问题不清），才反问一句澄清。否则就答。`}
   ];
-  async function initSeeds(){ const agents=await window.app.db.getAllAgents(); if(agents.length===0){ for(const a of SEED_AGENTS){ await window.app.db.addAgent(a);} } }
+  async function initSeeds(){
+    const agents=await window.app.db.getAllAgents();
+    if(agents.length===0){
+      for(const a of SEED_AGENTS){ await window.app.db.addAgent(a);}
+      return;
+    }
+    for(const agent of agents){
+      if(agent.is_seed===true && agent.name==='速查' && agent.provider!=='qwen'){
+        await window.app.db.updateAgent(agent.id,{ provider:'qwen', model:'qwen3.5-flash' });
+      }
+    }
+  }
   async function init(){ try { await window.app.db.openDb(); await initSeeds(); window.app.router.initRouter(); } catch (error) { window.app.ui.toast(`初始化失败：${error.message}`, 'error'); } }
   window.app = window.app || {}; window.app.init = init; window.addEventListener('DOMContentLoaded', init);
 })();

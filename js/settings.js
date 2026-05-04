@@ -1,5 +1,5 @@
 (() => {
-  const SENSITIVE_KEYS = new Set(['accessToken', 'openWeatherKey', 'goldApiKey', 'newsApiKey', 'exchangeRateKey', 'deepSeekKey', 'glmKey', 'miniMaxKey']);
+  const SENSITIVE_KEYS = new Set(['accessToken', 'openWeatherKey', 'goldApiKey', 'newsApiKey', 'exchangeRateKey', 'deepSeekKey', 'glmKey', 'qwenKey']);
 
   function toggleInputType(input) { input.type = input.type === 'password' ? 'text' : 'password'; }
   async function saveField(key, value) { try { await window.app.db.setSetting(key, value); window.app.ui.toast('保存成功', 'success'); } catch (error) { window.app.ui.toast(`保存失败：${error.message}`, 'error'); } }
@@ -9,7 +9,7 @@
     const sections = [
       { title: '代理配置', fields: [['Worker URL', 'workerUrl', '<填写你的Worker URL>'], ['Access Token', 'accessToken', '<填写你的Access Token>']] },
       { title: '数据源API', fields: [['OpenWeatherMap Key', 'openWeatherKey', '<填写你的OpenWeatherMap Key>'], ['GoldAPI Key', 'goldApiKey', '<填写你的GoldAPI Key>'], ['NewsAPI Key', 'newsApiKey', '<填写你的NewsAPI Key>'], ['ExchangeRate Key', 'exchangeRateKey', '<填写你的ExchangeRate Key>']] },
-      { title: 'AI模型', fields: [['DeepSeek Key', 'deepSeekKey', '<填写你的DeepSeek Key>'], ['GLM Key', 'glmKey', '<填写你的GLM Key>'], ['MiniMax Key', 'miniMaxKey', '<填写你的MiniMax Key>']] }
+      { title: 'AI模型', fields: [['DeepSeek Key', 'deepSeekKey', '<填写你的DeepSeek Key>'], ['GLM Key', 'glmKey', '<填写你的GLM Key>'], ['Qwen (通义千问) API Key', 'qwenKey', 'sk-…']] }
     ];
 
     const createField = (label, key, placeholder) => {
@@ -30,7 +30,7 @@
     const reportSec = document.createElement('section');
     reportSec.className = 'section';
     reportSec.innerHTML = `<h2>晨报设置</h2>
-      <div class="field"><label>晨报使用模型</label><select id="field-reportModel"><option value="deepseek-v4-flash">deepseek-v4-flash</option><option value="deepseek-v4-pro">deepseek-v4-pro</option><option value="glm-5.1">glm-5.1</option><option value="minimax-m2.7">minimax-m2.7</option></select></div>
+      <div class="field"><label>晨报使用模型</label><select id="field-reportModel"><option value="deepseek-v4-flash">deepseek-v4-flash</option><option value="deepseek-v4-pro">deepseek-v4-pro</option><option value="glm-5.1">glm-5.1</option><option value="qwen3.5-flash">qwen3.5-flash</option><option value="qwen3-max">qwen3-max</option></select></div>
       <div class="field"><label>新闻分类</label><select id="field-newsCategory"><option value="general">general</option><option value="business">business</option><option value="technology">technology</option><option value="science">science</option><option value="health">health</option><option value="sports">sports</option><option value="entertainment">entertainment</option></select></div>
       <div class="field"><label>新闻国家</label><select id="field-newsCountry"><option value="cn">cn</option><option value="us">us</option><option value="gb">gb</option><option value="jp">jp</option></select></div>`;
     container.appendChild(reportSec);
@@ -56,8 +56,13 @@
       const name = prompt('名称', agent?.name || ''); if (!name) return;
       const icon = prompt('图标emoji', agent?.icon || '🤖') || '🤖';
       const color = prompt('颜色HEX', agent?.color || '#4a9eff') || '#4a9eff';
-      if (agent) await window.app.db.updateAgent(agent.id, { name, icon, color });
-      else await window.app.db.addAgent({ name, icon, color, provider:'deepseek', model:'deepseek-v4-flash', thinking_default:false, system_prompt:'你是助手', is_seed:false });
+      const providerInput = prompt('Provider（deepseek / glm / qwen）', agent?.provider || 'deepseek') || 'deepseek';
+      const provider = ['deepseek', 'glm', 'qwen'].includes(providerInput) ? providerInput : 'deepseek';
+      const modelDefaultMap = { deepseek: 'deepseek-v4-flash', glm: 'glm-5.1', qwen: 'qwen3.5-flash' };
+      const modelHint = provider === 'qwen' ? '模型（qwen3.5-flash=Chat / qwen3-max=Thinking）' : '模型';
+      const model = prompt(modelHint, agent?.model || modelDefaultMap[provider]) || modelDefaultMap[provider];
+      if (agent) await window.app.db.updateAgent(agent.id, { name, icon, color, provider, model });
+      else await window.app.db.addAgent({ name, icon, color, provider, model, thinking_default:false, system_prompt:'你是助手', is_seed:false });
       renderSettingsPage(container);
     };
     container.querySelector('#new-agent').addEventListener('click', () => editAgent(null));
