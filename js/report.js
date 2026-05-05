@@ -24,7 +24,21 @@
       if (result.status === 'fulfilled') {
         const resp = result.value;
         if (!resp.ok) {
-          errors[sourceName] = `请求失败：${resp.status}`;
+          let detail = '';
+          try {
+            const rawText = await resp.text();
+            if (rawText) {
+              try {
+                const parsed = JSON.parse(rawText);
+                detail = typeof parsed === 'string' ? parsed : JSON.stringify(parsed);
+              } catch (error) {
+                detail = rawText;
+              }
+            }
+          } catch (error) {
+            detail = `读取错误详情失败：${error.message}`;
+          }
+          errors[sourceName] = detail ? `请求失败: ${resp.status} - ${detail}` : `请求失败: ${resp.status}`;
           return;
         }
         try {
