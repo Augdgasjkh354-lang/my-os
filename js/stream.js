@@ -14,7 +14,7 @@
           if (typeof onChunk === 'function') onChunk(normalizeChunk(parsed));
         }); }
       if (typeof onDone === 'function') onDone();
-    } catch (e) { if (typeof onError === 'function') onError(e); }
+    } catch (e) { window.app.logger?.logError('stream', 'SSE解析错误', { error: e.message }); if (typeof onError === 'function') onError(e); }
   }
   window.app = window.app || {}; window.app.stream = { consumeSSE };
 })();

@@ -79,6 +79,9 @@
       }
     }
   }
-  async function init(){ try { await window.app.db.openDb(); await initSeeds(); window.app.router.initRouter(); } catch (error) { window.app.ui.toast(`初始化失败：${error.message}`, 'error'); } }
+  async function init(){ try { window.app.logger?.logInfo('app', 'my-os 启动', { time: new Date().toISOString(), userAgent: navigator.userAgent }); await window.app.db.openDb(); await initSeeds(); window.app.router.initRouter(); } catch (error) { window.app.ui.toast(`初始化失败：${error.message}`, 'error'); } }
+  window.addEventListener('unhandledrejection', e => {
+    window.app.logger?.logError('app', '未捕获的Promise错误', { reason: e.reason?.message || String(e.reason) });
+  });
   window.app = window.app || {}; window.app.init = init; window.addEventListener('DOMContentLoaded', init);
 })();

@@ -39,15 +39,18 @@
             detail = `读取错误详情失败：${error.message}`;
           }
           errors[sourceName] = detail ? `请求失败: ${resp.status} - ${detail}` : `请求失败: ${resp.status}`;
+          window.app.logger?.logError('api', `晨报数据源失败: ${sourceName}`, { status: resp.status, error: errors[sourceName] });
           return;
         }
         try {
           data[sourceName] = await resp.json();
         } catch (error) {
           errors[sourceName] = `解析失败：${error.message}`;
+          window.app.logger?.logError('api', `晨报数据源失败: ${sourceName}`, { error: error.message });
         }
       } else {
         errors[sourceName] = result.reason.message || '请求异常';
+        window.app.logger?.logError('api', `晨报数据源失败: ${sourceName}`, { error: result.reason?.message || String(result.reason) });
       }
     }));
 
