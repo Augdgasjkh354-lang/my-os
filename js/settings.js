@@ -1,5 +1,5 @@
 (() => {
-  const SENSITIVE_KEYS = new Set(['accessToken', 'openWeatherKey', 'goldApiKey', 'newsApiKey', 'exchangeRateKey', 'deepSeekKey', 'glmKey', 'qwenKey']);
+  const SENSITIVE_KEYS = new Set(['accessToken', 'openWeatherKey', 'goldApiKey', 'newsDataKey', 'exchangeRateKey', 'deepSeekKey', 'glmKey', 'qwenKey']);
 
   function toggleInputType(input) { input.type = input.type === 'password' ? 'text' : 'password'; }
   async function saveField(key, value) { try { await window.app.db.setSetting(key, value); window.app.ui.toast('保存成功', 'success'); } catch (error) { window.app.ui.toast(`保存失败：${error.message}`, 'error'); } }
@@ -8,7 +8,7 @@
     container.innerHTML = '<h1>设置</h1>';
     const sections = [
       { title: '代理配置', fields: [['Worker URL', 'workerUrl', '<填写你的Worker URL>'], ['Access Token', 'accessToken', '<填写你的Access Token>']] },
-      { title: '数据源API', fields: [['OpenWeatherMap Key', 'openWeatherKey', '<填写你的OpenWeatherMap Key>'], ['GoldAPI Key', 'goldApiKey', '<填写你的GoldAPI Key>'], ['NewsAPI Key', 'newsApiKey', '<填写你的NewsAPI Key>'], ['ExchangeRate Key', 'exchangeRateKey', '<填写你的ExchangeRate Key>']] },
+      { title: '数据源API', fields: [['OpenWeatherMap Key', 'openWeatherKey', '<填写你的OpenWeatherMap Key>'], ['GoldAPI Key', 'goldApiKey', '<填写你的GoldAPI Key>'], ['NewsData.io API Key', 'newsDataKey', 'pub_…'], ['ExchangeRate Key', 'exchangeRateKey', '<填写你的ExchangeRate Key>']] },
       { title: 'AI模型', fields: [['DeepSeek Key', 'deepSeekKey', '<填写你的DeepSeek Key>'], ['GLM Key', 'glmKey', '<填写你的GLM Key>'], ['Qwen (通义千问) API Key', 'qwenKey', 'sk-…']] }
     ];
 
@@ -17,6 +17,12 @@
       wrap.className = 'field';
       const isSensitive = SENSITIVE_KEYS.has(key);
       wrap.innerHTML = `<label>${label}</label><div class="input-wrap"><input id="field-${key}" type="${isSensitive ? 'password' : 'text'}" placeholder="${placeholder}" />${isSensitive ? '<button type="button" data-eye="1">👁</button>' : ''}<button type="button" data-save="1">保存</button></div>`;
+      if (key === 'newsDataKey') {
+        const hint = document.createElement('div');
+        hint.className = 'helper';
+        hint.textContent = '免费注册：newsdata.io · 每日200次';
+        wrap.appendChild(hint);
+      }
       const input = wrap.querySelector('input');
       input.addEventListener('blur', () => saveField(key, input.value.trim()));
       wrap.querySelector('[data-save="1"]').addEventListener('click', () => saveField(key, input.value.trim()));
