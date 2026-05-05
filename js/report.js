@@ -6,13 +6,26 @@
   }
 
   async function fetchSources(settings) {
-    const location = settings.location || {};
+    const locationRaw = await window.app.db.getSetting('location');
+    const location = typeof locationRaw === 'string' ? (() => {
+      try { return JSON.parse(locationRaw); } catch (_) { return null; }
+    })() : locationRaw;
+    const hasValidLocation = !!location && location.lat != null && location.lon != null;
     const tasks = {
-      weather: window.app.api.proxyFetch('openweather', `data/2.5/weather?lat=${location.lat}&lon=${location.lon}&appid=${encodeURIComponent(settings.openWeatherKey || '')}&units=metric&lang=zh_cn`),
+      weather: hasValidLocation
+        ? window.app.api.proxyFetch('openweather', `data/2.5/weather?lat=${location.lat}&lon=${location.lon}&appid=${encodeURIComponent(settings.openWeatherKey || '')}&units=metric&lang=zh_cn`)
+        : Promise.reject(new Error('请先在设置页搜索并选择城市')),
       exchange: window.app.api.proxyFetch('exchangerate', `v6/${encodeURIComponent(settings.exchangeRateKey || '')}/latest/USD`),
       gold: window.app.api.proxyFetch('goldapi', 'api/XAU/USD', { headers: { 'X-Goldapi-Token': settings.goldApiKey || '' } }),
-      news: window.app.api.proxyFetch('newsapi', `v2/top-headlines?country=${encodeURIComponent(settings.newsCountry || 'cn')}&category=${encodeURIComponent(settings.newsCategory || 'general')}&apiKey=${encodeURIComponent(settings.newsApiKey || '')}&pageSize=10`)
+      news: (async () => {
+        const newsDataKey = await window.app.db.getSetting('newsDataKey');
+        if (!newsDataKey) throw new Error('未设置 NewsData.io API Key');
+        return fetch(`https://newsdata.io/api/1/news?country=cn&language=zh&apikey=${encodeURIComponent(newsDataKey)}&size=10`);
+      })()
     };
+    if (!hasValidLocation) {
+      window.app.logger?.logError('api', '天气请求失败：未设置城市位置', { location });
+    }
 
     const entries = Object.entries(tasks);
     const settled = await Promise.allSettled(entries.map(([, p]) => p));
@@ -81,7 +94,7 @@
         <section class="section"><h2>天气</h2>${weather ? `<div class="temp">${Math.round(weather.main?.temp ?? 0)}°C</div><div>${weather.name || '-'}</div><div class="helper">湿度 ${weather.main?.humidity ?? '-'}%</div><div class="helper">${weather.weather?.[0]?.description || '-'}</div>` : `<div class="error-text">${errors.weather || '获取失败'}</div>`}</section>
         <section class="section"><h2>汇率</h2>${exchange?.conversion_rates ? `<div>USD/CNY: ${exchange.conversion_rates.CNY ?? '-'}</div><div>USD/JPY: ${exchange.conversion_rates.JPY ?? '-'}</div><div>USD/EUR: ${exchange.conversion_rates.EUR ?? '-'}</div>` : `<div class="error-text">${errors.exchange || '获取失败'}</div>`}</section>
         <section class="section"><h2>金价</h2>${gold ? `<div>XAU/USD: ${gold.price ?? '-'}</div><div class="helper">当日涨跌: ${gold.ch ?? '-'}</div>` : `<div class="error-text">${errors.gold || '获取失败'}</div>`}</section>
-        <section class="section"><h2>新闻</h2>${news?.articles?.length ? `<ul class="news-list">${news.articles.slice(0, 5).map(item => `<li><a href="${item.url}" target="_blank" rel="noopener noreferrer">${item.title}</a></li>`).join('')}</ul>` : `<div class="error-text">${errors.news || '获取失败'}</div>`}</section>
+        <section class="section"><h2>新闻</h2>${news?.results?.length ? `<ul class="news-list">${news.results.slice(0, 5).map(item => `<li><a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.title}</a></li>`).join('')}</ul>` : `<div class="error-text">${errors.news || '获取失败'}</div>`}</section>
       </div>
     `;
   }
