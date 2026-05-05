@@ -63,3 +63,5 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .chat-input{margin-top:8px}.chat-actions{display:flex;justify-content:space-between;gap:8px;margin-top:6px}
 .agent-dot{display:inline-flex;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center;margin-right:8px}
 .agent-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}.agent-card{text-align:left}
+
+.diagnose-btn{width:34px;height:34px;border-radius:50%;padding:0;background:#2a2a2a;border-color:#2a2a2a}.diagnose-btn:hover{background:#333}.msg.system-diagnostic{background:#1a2a1a}

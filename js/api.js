@@ -4,7 +4,20 @@
     if (!workerUrl) throw new Error('请先在设置中填写 Worker URL'); if (!accessToken) throw new Error('请先在设置中填写 Access Token');
     const url = `${String(workerUrl).replace(/\/$/, '')}/${provider}/${String(path).replace(/^\//, '')}`;
     const headers = new Headers(options.headers || {}); headers.set('X-Access-Token', accessToken);
-    return fetch(url, { ...options, headers });
+    try {
+      const response = await fetch(url, { ...options, headers });
+      if (!response.ok) {
+        let responseText = '';
+        try { responseText = await response.clone().text(); } catch (_) {}
+        window.app.logger?.logError('api', `${provider} ${path} 返回 ${response.status}`, { status: response.status, body: responseText });
+      } else {
+        window.app.logger?.logInfo('api', `${provider} 请求成功`, { status: response.status });
+      }
+      return response;
+    } catch (err) {
+      window.app.logger?.logError('network', `fetch失败: ${url}`, { error: err.message });
+      throw err;
+    }
   }
   async function callAI(agent, messages, opts = {}) {
     const thinking = opts.thinking ?? agent.thinking_default;
@@ -18,7 +31,13 @@
       body.model = thinking ? 'qwen3-max' : 'qwen3.5-flash';
       body.enable_thinking = !!thinking;
     }
-    return proxyFetch(agent.provider, cfg.path, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: JSON.stringify(body) });
+    const response = await proxyFetch(agent.provider, cfg.path, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: JSON.stringify(body) });
+    if (!response.ok) {
+      let bodyText = '';
+      try { bodyText = await response.clone().text(); } catch (_) {}
+      window.app.logger?.logError('stream', `${agent.provider} 流式请求失败`, { status: response.status, body: bodyText });
+    }
+    return response;
   }
   window.app = window.app || {}; window.app.api = { proxyFetch, callAI };
 })();

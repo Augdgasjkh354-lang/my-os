@@ -142,3 +142,10 @@ Hash路由，三个主路由：#/report、#/memory、#/settings。js/router.js�
 ## 对话标题自动生成
 
 首条assistant消息完成后，异步调用速查Agent，prompt: “用10字内简体中文概括以下用户问题作为对话标题，仅输出标题，无需引号或标点：{首条用户消息}”
+
+## 诊断系统
+
+- js/logger.js 管理内存日志（最近100条，不持久化）
+- 所有 api.js / stream.js / db.js / report.js 的错误必须调用对应 logError()
+- 对话页「🔍」按钮触发诊断：把最近30条日志作为context发给当前agent
+- logger.js 的 formatLogsForAI() 是日志→AI的标准接口，不要绕过它
